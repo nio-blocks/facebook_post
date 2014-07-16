@@ -13,11 +13,11 @@ from nio.metadata.properties.string import StringProperty
 from nio.modules.threading.imports import Thread
 
 
-POST_URL = ("https://graph.facebook.com/{0}/feed")
+POST_URL = ("https://graph.facebook.com/{0}/feed?"
+            "access_token={1}")
 TOKEN_URL_FORMAT = ("https://graph.facebook.com/oauth"
                     "/access_token?client_id={0}&client_secret={1}"
                     "&grant_type=client_credentials")
-POST_URL = "https://api.twitter.com/1.1/statuses/update.json"
 MAX_TWEET_LEN = 140
 
 
@@ -36,6 +36,7 @@ class FacebookCreds(PropertyHolder):
 class FacebookPost(Block):
     
     message = ExpressionProperty(default='')
+    feed_id = StringProperty(default='me')
     creds = ObjectProperty(FacebookCreds)
     
     def __init__(self):
@@ -50,7 +51,7 @@ class FacebookPost(Block):
     def process_signals(self, signals):
         for s in signals:
             try:
-                status = self.status(s)
+                status = self.message(s)
                 if len(status) > MAX_TWEET_LEN:
                     raise RuntimeError(
                         "Status update exceeds {0} character limit".format(
@@ -66,8 +67,9 @@ class FacebookPost(Block):
             self._post_tweet(data)
 
     def _post_tweet(self, payload):
-        response = requests.post(POST_URL, data=payload,
-                                 auth=self._auth)
+        url = POST_URL.format(self.feed_id, self._access_token)
+        print("THE URL", url)
+        response = requests.post(url, data=payload)
                                  
         status = response.status_code
         if status != 200:
@@ -98,7 +100,7 @@ class FacebookPost(Block):
             token (str): The access token, which goes on the end of a request.
 
         """
-        resp = requests.get(self.TOKEN_URL_FORMAT.format(
+        resp = requests.get(TOKEN_URL_FORMAT.format(
             self.creds.consumer_key, self.creds.app_secret)
         )
         status = resp.status_code
