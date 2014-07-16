@@ -1,38 +1,43 @@
 import json
+from urllib.parse import quote_plus
 from unittest.mock import patch
-from twitter_post.twitter_post_block import TwitterPost
+from facebook_post.facebook_post_block import FacebookPost
 from nio.common.signal.base import Signal
 from nio.util.support.block_test_case import NIOBlockTestCase
 
 
-class TestTwitterPost(NIOBlockTestCase):
+class TestFacebookPost(NIOBlockTestCase):
     
-    @patch('twitter_post.twitter_post_block.TwitterPost._authorize')
-    @patch('twitter_post.twitter_post_block.TwitterPost._post_tweet')
-    def test_process_post(self, mock_post, mock_auth):
+    @patch('facebook_post.facebook_post_block.FacebookPost._authenticate')
+    @patch('facebook_post.facebook_post_block.FacebookPost._post_to_feed')
+    @patch('facebook_post.facebook_post_block.FacebookPost._check_permissions')
+    def test_process_post(self, mock_check, mock_post, mock_auth):
+        mock_check.return_value = True
         signals = [Signal({'foo': 'test signal'})]
-        blk = TwitterPost()
+        blk = FacebookPost()
         self.configure_block(blk, {
-            "status": "{{$foo}}"
+            "message": "{{$foo}}"
         })
         blk.start()
         mock_auth.assert_called_once()
 
         blk.process_signals(signals)
-        mock_post.assert_called_once_with({'status': signals[0].foo})
+        mock_post.assert_called_once_with(quote_plus(signals[0].foo))
         blk.stop()
 
-    @patch('twitter_post.twitter_post_block.TwitterPost._authorize')
-    @patch('twitter_post.twitter_post_block.TwitterPost._post_tweet')
-    def test_process_multiple(self, mock_post, mock_auth):
+    @patch('facebook_post.facebook_post_block.FacebookPost._authenticate')
+    @patch('facebook_post.facebook_post_block.FacebookPost._post_to_feed')
+    @patch('facebook_post.facebook_post_block.FacebookPost._check_permissions')
+    def test_process_multiple(self, mock_check, mock_post, mock_auth):
+        mock_check.return_value = True
         signals = [
             Signal({'foo': 'test signal'}),
             Signal({'foo': 'another test'}),
             Signal({'foo': 'one more time'})
         ]
-        blk = TwitterPost()
+        blk = FacebookPost()
         self.configure_block(blk, {
-            "status": "{{$foo}}"
+            "message": "{{$foo}}"
         })
         blk.start()
         mock_auth.assert_called_once()
@@ -40,6 +45,24 @@ class TestTwitterPost(NIOBlockTestCase):
         self.assertEqual(mock_post.call_count, len(signals))
         
         blk.stop()
-        
-                             
-                             
+
+    @patch('facebook_post.facebook_post_block.FacebookPost._authenticate')
+    @patch('facebook_post.facebook_post_block.FacebookPost._post_to_feed')
+    @patch('facebook_post.facebook_post_block.FacebookPost._check_permissions')
+    def test_permission_fail(self, mock_check, mock_post, mock_auth):
+        mock_check.return_value = False
+        signals = [
+            Signal({'foo': 'test signal'}),
+            Signal({'foo': 'another test'}),
+            Signal({'foo': 'one more time'})
+        ]
+        blk = FacebookPost()
+        self.configure_block(blk, {
+            "message": "{{$foo}}"
+        })
+        blk.start()
+        mock_auth.assert_called_once()
+        blk.process_signals(signals)
+        self.assertEqual(mock_post.call_count, 0)
+
+        blk.stop()

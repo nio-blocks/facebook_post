@@ -61,7 +61,6 @@ class FacebookPost(Block):
                             type(e).__name__, str(e))
                     )
                     continue
-                
                 self._post_to_feed(quote_plus(message))
         else:
             self._logger.error(
