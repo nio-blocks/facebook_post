@@ -14,7 +14,9 @@ from nio.modules.threading.imports import Thread
 
 
 POST_URL = ("https://graph.facebook.com/{0}/feed?"
-            "access_token={1}")
+            "message={1}&access_token={2}")
+PERMISSIONS_URL = ("https://graph.facebook.com/{0}/permissions?"
+                   "access_token={1}")
 TOKEN_URL_FORMAT = ("https://graph.facebook.com/oauth"
                     "/access_token?client_id={0}&client_secret={1}"
                     "&grant_type=client_credentials")
@@ -49,29 +51,28 @@ class FacebookPost(Block):
         self._authenticate()
 
     def process_signals(self, signals):
-        for s in signals:
-            try:
-                status = self.message(s)
-                if len(status) > MAX_TWEET_LEN:
-                    raise RuntimeError(
-                        "Status update exceeds {0} character limit".format(
-                            MAX_TWEET_LEN))
-            except Exception as e:
-                self._logger.error(
-                    "Status evaluation failed: {0}: {1}".format(
-                        type(e).__name__, str(e))
-                )
-                continue
+        if self._check_permissions():
+            for s in signals:
+                try:
+                    message = self.message(s)
+                except Exception as e:
+                    self._logger.error(
+                        "Message evaluation failed: {0}: {1}".format(
+                            type(e).__name__, str(e))
+                    )
+                    continue
                 
-            data = {'status': status}
-            self._post_tweet(data)
+                self._post_to_feed(quote_plus(message))
+        else:
+            self._logger.error(
+                "Insufficient permissions for id: {0}".format(self.feed_id)
+            )
 
-    def _post_tweet(self, payload):
-        url = POST_URL.format(self.feed_id, self._access_token)
-        print("THE URL", url)
-        response = requests.post(url, data=payload)
-                                 
+    def _post_to_feed(self, message):
+        url = POST_URL.format(self.feed_id, message, self._access_token)
+        response = requests.post(url)
         status = response.status_code
+
         if status != 200:
             self._logger.error(
                 "Facebook post failed with status {0}".format(status)
@@ -89,6 +90,16 @@ class FacebookPost(Block):
             self._logger.error("You need a consumer key and app secret, yo")
         else:
             self._access_token = self._request_access_token()
+
+    def _check_permissions(self):
+        result = False
+        url = PERMISSIONS_URL.format(self.feed_id, self._access_token)
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json().get('data')[0] or {}
+            if data.get('publish_actions') == 1:
+                result = True
+        return result
 
     def _request_access_token(self):
         """ Request an access token directly from facebook.
