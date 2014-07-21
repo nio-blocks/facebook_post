@@ -28,18 +28,16 @@ class FacebookCreds(PropertyHolder):
     """ Property holder for Facebook OAuth credentials.
 
     """
-    consumer_key = StringProperty()
-    app_secret = StringProperty()
-    oauth_token = StringProperty()
-    oauth_token_secret = StringProperty()
+    consumer_key = StringProperty(title='Consumer Key')
+    app_secret = StringProperty(title='App Secret')
 
 
 @Discoverable(DiscoverableType.block)
 class FacebookPost(Block):
     
-    message = ExpressionProperty(default='')
-    feed_id = StringProperty(default='me')
-    creds = ObjectProperty(FacebookCreds)
+    message = ExpressionProperty(title='Message', default='')
+    feed_id = StringProperty(title='Feed ID (user, group, etc.)', default='me')
+    creds = ObjectProperty(title='Credentials', FacebookCreds)
     
     def __init__(self):
         super().__init__()
@@ -56,6 +54,8 @@ class FacebookPost(Block):
                 try:
                     message = self.message(s)
                 except Exception as e:
+                    from traceback import format_exc
+                    print(format_exc())
                     self._logger.error(
                         "Message evaluation failed: {0}: {1}".format(
                             type(e).__name__, str(e))
