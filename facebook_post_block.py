@@ -37,7 +37,7 @@ class FacebookPost(Block):
     
     message = ExpressionProperty(title='Message', default='')
     feed_id = StringProperty(title='Feed ID (user, group, etc.)', default='me')
-    creds = ObjectProperty(title='Credentials', FacebookCreds)
+    creds = ObjectProperty(FacebookCreds, title='Credentials')
     
     def __init__(self):
         super().__init__()
