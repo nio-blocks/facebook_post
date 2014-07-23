@@ -1,7 +1,7 @@
+from ..facebook_post_block import FacebookPost
 import json
 from urllib.parse import quote_plus
 from unittest.mock import patch
-from facebook_post.facebook_post_block import FacebookPost
 from nio.common.signal.base import Signal
 from nio.util.support.block_test_case import NIOBlockTestCase
 
