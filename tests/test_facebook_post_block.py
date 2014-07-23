@@ -36,9 +36,9 @@ class TestFacebookPost(NIOBlockTestCase):
             Signal({'foo': 'one more time'})
         ]
         blk = FacebookPost()
-        self.configure_block(blk, {
-            "message": "{{$foo}}"
-        })
+        # self.configure_block(blk, {
+        #     "message": "{{$foo}}"
+        # })
         blk.start()
         mock_auth.assert_called_once()
         blk.process_signals(signals)

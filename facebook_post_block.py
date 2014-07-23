@@ -10,7 +10,7 @@ from nio.metadata.properties.object import ObjectProperty
 from nio.metadata.properties.holder import PropertyHolder
 from nio.metadata.properties.expression import ExpressionProperty
 from nio.metadata.properties.string import StringProperty
-from nio.modules.threading.imports import Thread
+from nio.modules.threading import Thread
 
 
 POST_URL = ("https://graph.facebook.com/{0}/feed?"
