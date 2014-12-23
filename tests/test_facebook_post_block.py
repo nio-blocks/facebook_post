@@ -7,10 +7,10 @@ from nio.util.support.block_test_case import NIOBlockTestCase
 
 
 class TestFacebookPost(NIOBlockTestCase):
-    
-    @patch('facebook_post.facebook_post_block.FacebookPost._authenticate')
-    @patch('facebook_post.facebook_post_block.FacebookPost._post_to_feed')
-    @patch('facebook_post.facebook_post_block.FacebookPost._check_permissions')
+
+    @patch.object(FacebookPost, '_authenticate')
+    @patch.object(FacebookPost, '_post_to_feed')
+    @patch.object(FacebookPost, '_check_permissions')
     def test_process_post(self, mock_check, mock_post, mock_auth):
         mock_check.return_value = True
         signals = [Signal({'foo': 'test signal'})]
@@ -25,9 +25,9 @@ class TestFacebookPost(NIOBlockTestCase):
         mock_post.assert_called_once_with(quote_plus(signals[0].foo))
         blk.stop()
 
-    @patch('facebook_post.facebook_post_block.FacebookPost._authenticate')
-    @patch('facebook_post.facebook_post_block.FacebookPost._post_to_feed')
-    @patch('facebook_post.facebook_post_block.FacebookPost._check_permissions')
+    @patch.object(FacebookPost, '_authenticate')
+    @patch.object(FacebookPost, '_post_to_feed')
+    @patch.object(FacebookPost, '_check_permissions')
     def test_process_multiple(self, mock_check, mock_post, mock_auth):
         mock_check.return_value = True
         signals = [
@@ -43,12 +43,12 @@ class TestFacebookPost(NIOBlockTestCase):
         mock_auth.assert_called_once()
         blk.process_signals(signals)
         self.assertEqual(mock_post.call_count, len(signals))
-        
+
         blk.stop()
 
-    @patch('facebook_post.facebook_post_block.FacebookPost._authenticate')
-    @patch('facebook_post.facebook_post_block.FacebookPost._post_to_feed')
-    @patch('facebook_post.facebook_post_block.FacebookPost._check_permissions')
+    @patch.object(FacebookPost, '_authenticate')
+    @patch.object(FacebookPost, '_post_to_feed')
+    @patch.object(FacebookPost, '_check_permissions')
     def test_permission_fail(self, mock_check, mock_post, mock_auth):
         mock_check.return_value = False
         signals = [
