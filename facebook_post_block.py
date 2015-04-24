@@ -1,8 +1,6 @@
 import requests
 import json
 from urllib.parse import quote_plus
-import oauth2 as oauth
-from requests_oauthlib import OAuth1
 
 from nio.common.block.base import Block
 from nio.common.discovery import Discoverable, DiscoverableType
@@ -34,16 +32,16 @@ class FacebookCreds(PropertyHolder):
 
 @Discoverable(DiscoverableType.block)
 class FacebookPost(Block):
-    
+
     message = ExpressionProperty(title='Message', default='')
     feed_id = StringProperty(title='Feed ID (user, group, etc.)', default='me')
     creds = ObjectProperty(FacebookCreds, title='Credentials')
-    
+
     def __init__(self):
         super().__init__()
         self._auth = None
         self._access_token = None
-    
+
     def start(self):
         super().start()
         self._authenticate()
