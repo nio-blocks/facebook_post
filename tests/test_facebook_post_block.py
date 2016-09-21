@@ -2,8 +2,8 @@ from ..facebook_post_block import FacebookPost
 import json
 from urllib.parse import quote_plus
 from unittest.mock import patch
-from nio.common.signal.base import Signal
-from nio.util.support.block_test_case import NIOBlockTestCase
+from nio.signal.base import Signal
+from nio.testing.block_test_case import NIOBlockTestCase
 
 
 class TestFacebookPost(NIOBlockTestCase):
@@ -19,7 +19,7 @@ class TestFacebookPost(NIOBlockTestCase):
             "message": "{{$foo}}"
         })
         blk.start()
-        mock_auth.assert_called_once()
+        self.assertEqual(mock_auth.call_count, 1)
 
         blk.process_signals(signals)
         mock_post.assert_called_once_with(quote_plus(signals[0].foo))
@@ -40,7 +40,7 @@ class TestFacebookPost(NIOBlockTestCase):
         #     "message": "{{$foo}}"
         # })
         blk.start()
-        mock_auth.assert_called_once()
+        self.assertEqual(mock_auth.call_count, 1)
         blk.process_signals(signals)
         self.assertEqual(mock_post.call_count, len(signals))
 
@@ -61,7 +61,7 @@ class TestFacebookPost(NIOBlockTestCase):
             "message": "{{$foo}}"
         })
         blk.start()
-        mock_auth.assert_called_once()
+        self.assertEqual(mock_auth.call_count, 1)
         blk.process_signals(signals)
         self.assertEqual(mock_post.call_count, 0)
 

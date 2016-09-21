@@ -2,13 +2,13 @@ import requests
 import json
 from urllib.parse import quote_plus
 
-from nio.common.block.base import Block
-from nio.common.discovery import Discoverable, DiscoverableType
-from nio.metadata.properties.object import ObjectProperty
-from nio.metadata.properties.holder import PropertyHolder
-from nio.metadata.properties.expression import ExpressionProperty
-from nio.metadata.properties.string import StringProperty
-from nio.modules.threading import Thread
+from nio.block.base import Block
+from nio.util.discovery import discoverable
+from nio.properties.object import ObjectProperty
+from nio.properties.holder import PropertyHolder
+from nio.properties import Property
+from nio.properties.string import StringProperty
+from threading import Thread
 
 
 POST_URL = ("https://graph.facebook.com/{0}/feed?"
@@ -26,14 +26,16 @@ class FacebookCreds(PropertyHolder):
     """ Property holder for Facebook OAuth credentials.
 
     """
-    consumer_key = StringProperty(title='Consumer Key')
-    app_secret = StringProperty(title='App Secret')
+    consumer_key = StringProperty(title='Consumer Key',
+                                  default='[[FACEBOOK_CONSUMER_KEY]]')
+    app_secret = StringProperty(title='App Secret',
+                                default='[[FACEBOOK_APP_SECRET]]')
 
 
-@Discoverable(DiscoverableType.block)
+@discoverable
 class FacebookPost(Block):
 
-    message = ExpressionProperty(title='Message', default='')
+    message = Property(title='Message', default='')
     feed_id = StringProperty(title='Feed ID (user, group, etc.)', default='me')
     creds = ObjectProperty(FacebookCreds, title='Credentials')
 
@@ -54,28 +56,28 @@ class FacebookPost(Block):
                 except Exception as e:
                     from traceback import format_exc
                     print(format_exc())
-                    self._logger.error(
+                    self.logger.error(
                         "Message evaluation failed: {0}: {1}".format(
                             type(e).__name__, str(e))
                     )
                     continue
                 self._post_to_feed(quote_plus(message))
         else:
-            self._logger.error(
-                "Insufficient permissions for id: {0}".format(self.feed_id)
+            self.logger.error(
+                "Insufficient permissions for id: {0}".format(self.feed_id())
             )
 
     def _post_to_feed(self, message):
-        url = POST_URL.format(self.feed_id, message, self._access_token)
+        url = POST_URL.format(self.feed_id(), message, self._access_token)
         response = requests.post(url)
         status = response.status_code
 
         if status != 200:
-            self._logger.error(
+            self.logger.error(
                 "Facebook post failed with status {0}".format(status)
             )
         else:
-            self._logger.debug(
+            self.logger.debug(
                 "Posted '{0}' to Facebook!".format(data['status'])
             )
 
@@ -83,14 +85,14 @@ class FacebookPost(Block):
         """ Generates and records the access token for pending requests.
 
         """
-        if self.creds.consumer_key is None or self.creds.app_secret is None:
-            self._logger.error("You need a consumer key and app secret, yo")
+        if self.creds().consumer_key() is None or self.creds().app_secret() is None:
+            self.logger.error("You need a consumer key and app secret, yo")
         else:
             self._access_token = self._request_access_token()
 
     def _check_permissions(self):
         result = False
-        url = PERMISSIONS_URL.format(self.feed_id, self._access_token)
+        url = PERMISSIONS_URL.format(self.feed_id(), self._access_token)
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json().get('data')[0] or {}
@@ -109,7 +111,7 @@ class FacebookPost(Block):
 
         """
         resp = requests.get(TOKEN_URL_FORMAT.format(
-            self.creds.consumer_key, self.creds.app_secret)
+            self.creds().consumer_key(), self.creds().app_secret())
         )
         status = resp.status_code
 
@@ -117,11 +119,11 @@ class FacebookPost(Block):
         # and secret. This probably won't work, but the docs say that it
         # should. for more info, see:
         # https://developers.facebook.com/docs/facebook-login/access-tokens
-        token = "%s|%s" % (self.creds.consumer_key, self.creds.app_secret)
+        token = "%s|%s" % (self.creds().consumer_key(), self.creds().app_secret())
         if status == 200:
             token = resp.text.split('access_token=')[1]
         else:
-            self._logger.error(
+            self.logger.error(
                 "Facebook token request failed with status %d" % status
             )
         return token
