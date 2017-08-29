@@ -1,14 +1,9 @@
-import requests
-import json
 from urllib.parse import quote_plus
 
-from nio.block.base import Block
-from nio.util.discovery import discoverable
-from nio.properties.object import ObjectProperty
-from nio.properties.holder import PropertyHolder
-from nio.properties import Property
-from nio.properties.string import StringProperty
-from threading import Thread
+import requests
+from nio import TerminatorBlock
+from nio.properties import (ObjectProperty, PropertyHolder, Property,
+                            StringProperty, VersionProperty)
 
 
 POST_URL = ("https://graph.facebook.com/{0}/feed?"
@@ -32,9 +27,9 @@ class FacebookCreds(PropertyHolder):
                                 default='[[FACEBOOK_APP_SECRET]]')
 
 
-@discoverable
-class FacebookPost(Block):
+class FacebookPost(TerminatorBlock):
 
+    version = VersionProperty("0.0.1")
     message = Property(title='Message', default='')
     feed_id = StringProperty(title='Feed ID (user, group, etc.)', default='me')
     creds = ObjectProperty(FacebookCreds, title='Credentials')
@@ -54,12 +49,7 @@ class FacebookPost(Block):
                 try:
                     message = self.message(s)
                 except Exception as e:
-                    from traceback import format_exc
-                    print(format_exc())
-                    self.logger.error(
-                        "Message evaluation failed: {0}: {1}".format(
-                            type(e).__name__, str(e))
-                    )
+                    self.logger.exception("Message evaluation failed:")
                     continue
                 self._post_to_feed(quote_plus(message))
         else:
@@ -77,16 +67,15 @@ class FacebookPost(Block):
                 "Facebook post failed with status {0}".format(status)
             )
         else:
-            self.logger.debug(
-                "Posted '{0}' to Facebook!".format(data['status'])
-            )
+            self.logger.debug("Posted to Facebook!")
 
     def _authenticate(self):
         """ Generates and records the access token for pending requests.
 
         """
-        if self.creds().consumer_key() is None or self.creds().app_secret() is None:
-            self.logger.error("You need a consumer key and app secret, yo")
+        if self.creds().consumer_key() is None or \
+                self.creds().app_secret() is None:
+            self.logger.error("You need a consumer key and app secret")
         else:
             self._access_token = self._request_access_token()
 
@@ -119,7 +108,8 @@ class FacebookPost(Block):
         # and secret. This probably won't work, but the docs say that it
         # should. for more info, see:
         # https://developers.facebook.com/docs/facebook-login/access-tokens
-        token = "%s|%s" % (self.creds().consumer_key(), self.creds().app_secret())
+        token = "{}.{}".format(
+            self.creds().consumer_key(), self.creds().app_secret())
         if status == 200:
             token = resp.text.split('access_token=')[1]
         else:
