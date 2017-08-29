@@ -49,12 +49,7 @@ class FacebookPost(TerminatorBlock):
                 try:
                     message = self.message(s)
                 except Exception as e:
-                    from traceback import format_exc
-                    print(format_exc())
-                    self.logger.error(
-                        "Message evaluation failed: {0}: {1}".format(
-                            type(e).__name__, str(e))
-                    )
+                    self.logger.exception("Message evaluation failed:")
                     continue
                 self._post_to_feed(quote_plus(message))
         else:
@@ -72,9 +67,7 @@ class FacebookPost(TerminatorBlock):
                 "Facebook post failed with status {0}".format(status)
             )
         else:
-            self.logger.debug(
-                "Posted '{0}' to Facebook!".format(data['status'])
-            )
+            self.logger.debug("Posted to Facebook!")
 
     def _authenticate(self):
         """ Generates and records the access token for pending requests.
@@ -82,7 +75,7 @@ class FacebookPost(TerminatorBlock):
         """
         if self.creds().consumer_key() is None or \
                 self.creds().app_secret() is None:
-            self.logger.error("You need a consumer key and app secret, yo")
+            self.logger.error("You need a consumer key and app secret")
         else:
             self._access_token = self._request_access_token()
 
