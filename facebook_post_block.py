@@ -1,6 +1,4 @@
-import json
 from urllib.parse import quote_plus
-from threading import Thread
 
 import requests
 from nio import TerminatorBlock
