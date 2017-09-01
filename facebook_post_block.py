@@ -29,7 +29,7 @@ class FacebookCreds(PropertyHolder):
 
 class FacebookPost(TerminatorBlock):
 
-    version = VersionProperty("0.0.1")
+    version = VersionProperty("1.0.0")
     message = Property(title='Message', default='')
     feed_id = StringProperty(title='Feed ID (user, group, etc.)', default='me')
     creds = ObjectProperty(FacebookCreds, title='Credentials')

@@ -1,6 +1,6 @@
 {
   "nio/FacebookPost": {
-    "version": "0.0.1",
+    "version": "1.0.0",
     "description": "Publish a status message to the specified Facebook user or group feed.",
     "properties": {
       "creds": {

@@ -2,6 +2,6 @@
   "nio/FacebookPost": {
     "language": "Python",
     "url": "git://github.com/nio-blocks/facebook_post.git",
-    "version": "0.0.1"
+    "version": "1.0.0"
   }
 }
