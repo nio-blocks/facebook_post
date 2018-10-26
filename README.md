@@ -1,6 +1,6 @@
 FacebookPost
 ============
-DEPRECATED: [This version of the Facebook API no longer exists] Publish a status message to the specified Facebook user or group feed.
+DEPRECATED - This version of the Facebook API no longer exists - Publish a status message to the specified Facebook user or group feed.
 
 Properties
 ----------
