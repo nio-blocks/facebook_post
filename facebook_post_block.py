@@ -21,7 +21,7 @@ class FacebookCreds(PropertyHolder):
     """ Property holder for Facebook OAuth credentials.
 
     """
-    consumer_key = StringProperty(title='Consumer Key',
+    consumer_key = StringProperty(title='App ID',
                                   default='[[FACEBOOK_CONSUMER_KEY]]')
     app_secret = StringProperty(title='App Secret',
                                 default='[[FACEBOOK_APP_SECRET]]')
